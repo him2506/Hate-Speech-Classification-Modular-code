@@ -1,2 +1,13 @@
-data_ingestion.py 
-data_transformation.py
+1. clone the repo
+2. install requirements.txt
+3. package installation
+4. public server and private server for publishing packages
+5. fast api
+6. streamlit
+7. docker image
+8. minikube
+9. github actions
+10. ci/cd deploement
+11. public server and private server for publishing packages
+12. yaml file 
+13. pytest
