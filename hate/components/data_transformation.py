@@ -39,15 +39,14 @@ class DataTransformation:
             raw_data = pd.read_csv(self.data_ingestion_artifacts.raw_data_file_path)
             raw_data.drop(self.data_transformation_config.DROP_COLUMNS,axis = self.data_transformation_config.AXIS,
             inplace = self.data_transformation_config.INPLACE)
-
             raw_data[raw_data[self.data_transformation_config.CLASS]==0][self.data_transformation_config.CLASS]=1
-            
+
             # replace the value of 0 to 1
             raw_data[self.data_transformation_config.CLASS].replace({0:1},inplace=True)
 
             # Let's replace the value of 2 to 0.
             raw_data[self.data_transformation_config.CLASS].replace({2:0}, inplace = True)
-
+            
             # Let's change the name of the 'class' to label
             raw_data.rename(columns={self.data_transformation_config.CLASS:self.data_transformation_config.LABEL},inplace =True)
             logging.info(f"Exited the raw_data_cleaning function and returned the raw_data {raw_data}")
@@ -63,7 +62,7 @@ class DataTransformation:
         try:
             logging.info("Entered into the concat_dataframe function")
             # Let's concatinate both the data into a single data frame.
-            frame = [self.raw_data_cleaning(), self.imbalance_data_cleaning()]
+            frame = [self.imbalance_data_cleaning(),self.raw_data_cleaning()]
             df = pd.concat(frame)
             print(df.head())
             logging.info(f"returned the concatinated dataframe {df}")
@@ -107,6 +106,8 @@ class DataTransformation:
             self.imbalance_data_cleaning()
             self.raw_data_cleaning()
             df = self.concat_dataframe()
+            logging.info("Data concatanation has been done.")
+            
             df[self.data_transformation_config.TWEET]=df[self.data_transformation_config.TWEET].apply(self.concat_data_cleaning)
 
             os.makedirs(self.data_transformation_config.DATA_TRANSFORMATION_ARTIFACTS_DIR, exist_ok=True)

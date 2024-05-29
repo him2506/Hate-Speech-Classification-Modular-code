@@ -12,9 +12,8 @@ from hate.constants import *
 from hate.configuration.gcloud_syncer import GCloudSync
 # from keras.preprocessing.text import Tokenizer
 from sklearn.metrics import confusion_matrix
-from hate.entity.config_entity import ModelEvaluationConfig
+from hate.entity.config_entity import ModelEvaluationConfig,ModelTrainerConfig
 from hate.entity.artifact_entity import ModelEvaluationArtifacts, ModelTrainerArtifacts, DataTransformationArtifacts
-
 
 
 class ModelEvaluation:
@@ -28,7 +27,10 @@ class ModelEvaluation:
         """
 
         self.model_evaluation_config = model_evaluation_config
-        self.model_trainer_artifacts = model_trainer_artifacts
+        self.model_trainer_artifacts = model_trainer_artifacts(
+                trained_model_path = ModelTrainerConfig().TRAINED_MODEL_PATH,
+                x_test_path = ModelTrainerConfig().X_TEST_DATA_PATH,
+                y_test_path = ModelTrainerConfig().Y_TEST_DATA_PATH)
         self.data_transformation_artifacts = data_transformation_artifacts
         self.gcloud = GCloudSync()
 
@@ -42,9 +44,10 @@ class ModelEvaluation:
 
             os.makedirs(self.model_evaluation_config.BEST_MODEL_DIR_PATH, exist_ok=True)
 
-            self.gcloud.sync_folder_from_gcloud(self.model_evaluation_config.BUCKET_NAME,
-                                                self.model_evaluation_config.MODEL_NAME,
-                                                self.model_evaluation_config.BEST_MODEL_DIR_PATH)
+            # I have to return the best model path
+            # self.gcloud.sync_folder_from_gcloud(self.model_evaluation_config.BUCKET_NAME,
+            #                                     self.model_evaluation_config.MODEL_NAME,
+            #                                     self.model_evaluation_config.BEST_MODEL_DIR_PATH)
 
             best_model_path = os.path.join(self.model_evaluation_config.BEST_MODEL_DIR_PATH,
                                            self.model_evaluation_config.MODEL_NAME)
@@ -65,38 +68,44 @@ class ModelEvaluation:
             logging.info("Entering into to the evaluate function of Model Evaluation class")
             print(self.model_trainer_artifacts.x_test_path)
 
-            x_test = pd.read_csv(self.model_trainer_artifacts.x_test_path,index_col=0)
-            print(x_test)
-            y_test = pd.read_csv(self.model_trainer_artifacts.y_test_path,index_col=0)
+            # x_test = pd.read_csv(self.model_trainer_artifacts.x_test_path,index_col=0)
+            # print(x_test)
+            # y_test = pd.read_csv(self.model_trainer_artifacts.y_test_path,index_col=0)
+
+            with open(self.model_trainer_artifacts.x_test_path, 'rb') as handle:
+                x_test_loaded = pickle.load(handle)
+
+            with open(self.model_trainer_artifacts.y_test_path, 'rb') as handle:
+                y_test_loaded = pickle.load(handle)
 
             with open('tokenizer.pickle', 'rb') as handle:
                 tokenizer = pickle.load(handle)
 
             load_model=keras.models.load_model(self.model_trainer_artifacts.trained_model_path)
 
-            x_test = x_test['tweet'].astype(str)
+            # x_test = x_test['tweet'].astype(str)
 
-            x_test = x_test.squeeze()
-            y_test = y_test.squeeze()
+            # x_test = x_test.squeeze()
+            # y_test = y_test.squeeze()
 
-            test_sequences = tokenizer.texts_to_sequences(x_test)
-            test_sequences_matrix = pad_sequences(test_sequences,maxlen=MAX_LEN)
-            print(f"----------{test_sequences_matrix}------------------")
+            # test_sequences = tokenizer.texts_to_sequences(x_test)
+            # test_sequences_matrix = pad_sequences(test_sequences,maxlen=MAX_LEN)
+            # print(f"----------{test_sequences_matrix}------------------")
 
-            print(f"-----------------{x_test.shape}--------------")
-            print(f"-----------------{y_test.shape}--------------")
-            accuracy = load_model.evaluate(test_sequences_matrix,y_test)
+            # print(f"-----------------{x_test.shape}--------------")
+            # print(f"-----------------{y_test.shape}--------------")
+            accuracy = load_model.evaluate(x_test_loaded,y_test_loaded)
             logging.info(f"the test accuracy is {accuracy}")
 
-            lstm_prediction = load_model.predict(test_sequences_matrix)
+            lstm_prediction = load_model.predict(x_test_loaded)
             res = []
             for prediction in lstm_prediction:
                 if prediction[0] < 0.5:
                     res.append(0)
                 else:
                     res.append(1)
-            print(confusion_matrix(y_test,res))
-            logging.info(f"the confusion_matrix is {confusion_matrix(y_test,res)} ")
+            print(confusion_matrix(y_test_loaded,res))
+            logging.info(f"the confusion_matrix is {confusion_matrix(y_test_loaded,res)} ")
             return accuracy
         except Exception as e:
             raise CustomException(e, sys) from e
@@ -120,6 +129,7 @@ class ModelEvaluation:
 
             trained_model_accuracy = self.evaluate()
 
+            # here I have to change the code for below functions
             logging.info("Fetch best model from gcloud storage")
             best_model_path = self.get_best_model_from_gcloud()
 
@@ -147,11 +157,3 @@ class ModelEvaluation:
 
         except Exception as e:
             raise CustomException(e, sys) from e
-
-
-
-
-
-
-
-

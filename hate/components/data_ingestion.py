@@ -1,11 +1,15 @@
 import os
 import sys
+import pandas as pd
 from zipfile import ZipFile
 from hate.logger import logging
 from hate.exception import CustomException
-from hate.configuration.gcloud_syncer import GCloudSync
+# from hate.configuration.gcloud_syncer import GCloudSync
 from hate.entity.config_entity import DataIngestionConfig
 from hate.entity.artifact_entity import DataIngestionArtifacts
+
+
+
 
 
 class DataIngestion:
@@ -15,7 +19,20 @@ class DataIngestion:
         :param data_ingestion_config: Configuration for data ingestion
         """
         self.data_ingestion_config = data_ingestion_config
-        self.gcloud = GCloudSync()
+        # self.gcloud = GCloudSync()
+
+    def load_dataset(self):
+        logging.info("Entered the load_dataset method of Data ingestion class")
+        try:
+            # with ZipFile(self.data_ingestion_config.ZIP_FILE_PATH, 'r') as zip_ref:
+            #     zip_ref.extractall(self.data_ingestion_config.ZIP_FILE_DIR)
+
+            # logging.info("Exited the unzip_and_clean method of Data ingestion class")
+
+            return self.data_ingestion_config.DATA_ARTIFACTS_DIR, self.data_ingestion_config.NEW_DATA_ARTIFACTS_DIR
+
+        except Exception as e:
+            raise CustomException(e, sys) from e
 
     
     def get_data_from_gcloud(self) -> None:
@@ -45,7 +62,6 @@ class DataIngestion:
             logging.info("Exited the unzip_and_clean method of Data ingestion class")
 
             return self.data_ingestion_config.DATA_ARTIFACTS_DIR, self.data_ingestion_config.NEW_DATA_ARTIFACTS_DIR
-
         except Exception as e:
             raise CustomException(e, sys) from e
 
@@ -63,11 +79,14 @@ class DataIngestion:
         logging.info("Entered the initiate_data_ingestion method of Data ingestion class")
         try:
 
-            self.get_data_from_gcloud()
+            # self.get_data_from_gcloud()
 
             logging.info("Fetched the data from S3 bucket")
 
-            imbalance_data_file_path, raw_data_file_path = self.unzip_and_clean()
+            # imbalance_data_file_path, raw_data_file_path = self.unzip_and_clean()
+
+            imbalance_data_file_path, raw_data_file_path = self.load_dataset()
+
 
             logging.info("Unzipped file and split into train and valid")
 

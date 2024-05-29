@@ -6,12 +6,13 @@ from hate.logger import logging
 from hate.constants import *
 from hate.exception import CustomException
 from sklearn.model_selection import train_test_split
-from keras.preprocessing.text import Tokenizer
-from keras.utils import pad_sequences
-from hate.ml.model import ModelArchitecture
+from tensorflow.keras.preprocessing.text import Tokenizer
+# from keras.utils import pad_sequences
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+from hate.ml.model_arch import ModelArchitecture
 from hate.entity.config_entity import ModelTrainerConfig
 from hate.entity.artifact_entity import ModelTrainerArtifacts,DataTransformationArtifacts
-
+import numpy as np
 
 class ModelTrainer:
     def __init__(self,data_transformation_artifacts: DataTransformationArtifacts,
@@ -27,11 +28,32 @@ class ModelTrainer:
             logging.info("Reading the data")
             df = pd.read_csv(csv_path, index_col=False)
             logging.info("Splitting the data into x and y")
-            x = df[TWEET]
-            y = df[LABEL]
+            x = df["tweet"]
+            y = df["label"]
+
+            df['tweet'] = df['tweet'].astype(str)
+
+            # Alternatively, fill NaN values with an empty string before conversion
+            df['tweet'] = df['tweet'].fillna('').astype(str)
+            
+            max_words = 10000
+            max_len = 300
+            tokenizer = Tokenizer(num_words=max_words)
+            tokenizer.fit_on_texts(df['tweet'])
+            sequences = tokenizer.texts_to_sequences(df['tweet'])
+            sequences_matrix = pad_sequences(sequences, maxlen=max_len)
+
+            with open('tokenizer.pickle', 'wb') as handle:
+                pickle.dump(tokenizer, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+            # # Convert labels to numpy array
+            labels = np.array(df['label'])
+
+            x_train,x_test,y_train,y_test = train_test_split(sequences_matrix, labels, test_size=0.2, random_state=42)
+
 
             logging.info("Applying train_test_split on the data")
-            x_train,x_test,y_train,y_test = train_test_split(x,y, test_size=0.3,random_state = 42)
+            # x_train,x_test,y_train,y_test = train_test_split(x,y, test_size=0.3,random_state = 42)
             print(len(x_train),len(y_train))
             print(len(x_test),len(y_test))
             print(type(x_train),type(y_train))
@@ -71,7 +93,6 @@ class ModelTrainer:
             logging.info("Entered the initiate_model_trainer function ")
             x_train,x_test,y_train,y_test = self.spliting_data(csv_path=self.data_transformation_artifacts.transformed_data_path)
             model_architecture = ModelArchitecture()   
-
             model = model_architecture.get_model()
 
 
@@ -80,33 +101,53 @@ class ModelTrainer:
 
             logging.info(f"Xtest size is : {x_test.shape}")
 
-            sequences_matrix,tokenizer =self.tokenizing(x_train)
+            # sequences_matrix,tokenizer =self.tokenizing(x_train)
 
 
             logging.info("Entered into model training")
-            model.fit(sequences_matrix, y_train, 
-                        batch_size=self.model_trainer_config.BATCH_SIZE, 
-                        epochs = self.model_trainer_config.EPOCH, 
-                        validation_split=self.model_trainer_config.VALIDATION_SPLIT, 
-                        )
+
+            # model.fit(sequences_matrix, y_train, 
+            #             batch_size=self.model_trainer_config.BATCH_SIZE, 
+            #             epochs = self.model_trainer_config.EPOCH, 
+            #             validation_split=self.model_trainer_config.VALIDATION_SPLIT, 
+            #             )
+
+            model.fit(x_train, y_train, validation_data=(x_test, y_test), epochs= self.model_trainer_config.EPOCH, batch_size=self.model_trainer_config.BATCH_SIZE)
             logging.info("Model training finished")
-            with open('tokenizer.pickle', 'wb') as handle:
-                pickle.dump(tokenizer, handle, protocol=pickle.HIGHEST_PROTOCOL)
+            # with open('tokenizer.pickle', 'wb') as handle:
+            #     pickle.dump(tokenizer, handle, protocol=pickle.HIGHEST_PROTOCOL)
             os.makedirs(self.model_trainer_config.TRAINED_MODEL_DIR,exist_ok=True)
 
 
 
             logging.info("saving the model")
             model.save(self.model_trainer_config.TRAINED_MODEL_PATH)
-            x_test.to_csv(self.model_trainer_config.X_TEST_DATA_PATH)
-            y_test.to_csv(self.model_trainer_config.Y_TEST_DATA_PATH)
+            # x_test.to_csv(self.model_trainer_config.X_TEST_DATA_PATH)
+            # y_test.to_csv(self.model_trainer_config.Y_TEST_DATA_PATH)
 
-            x_train.to_csv(self.model_trainer_config.X_TRAIN_DATA_PATH)
+            # x_train.to_csv(self.model_trainer_config.X_TRAIN_DATA_PATH)
+
+
+            # Save x_test to a file
+            x_test_path = self.model_trainer_config.X_TEST_DATA_PATH
+            with open(x_test_path, 'wb') as handle:
+                pickle.dump(x_test, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+            # Save y_test to a file
+            y_test_path = self.model_trainer_config.Y_TEST_DATA_PATH
+            with open(y_test_path, 'wb') as handle:
+                pickle.dump(y_test, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+            # Save x_train to a file
+            x_train_path = self.model_trainer_config.X_TRAIN_DATA_PATH
+            with open(x_train_path, 'wb') as handle:
+                pickle.dump(x_train, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
             model_trainer_artifacts = ModelTrainerArtifacts(
                 trained_model_path = self.model_trainer_config.TRAINED_MODEL_PATH,
                 x_test_path = self.model_trainer_config.X_TEST_DATA_PATH,
                 y_test_path = self.model_trainer_config.Y_TEST_DATA_PATH)
+                
             logging.info("Returning the ModelTrainerArtifacts")
             return model_trainer_artifacts
 

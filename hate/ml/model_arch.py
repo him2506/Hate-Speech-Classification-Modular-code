@@ -14,11 +14,11 @@ class ModelArchitecture:
     
     def get_model(self):
         model = Sequential()
-        model.add(Embedding(MAX_WORDS, 100,input_length=MAX_LEN))
+        model.add(Embedding(input_dim=10000, output_dim=100))
         model.add(SpatialDropout1D(0.2))
-        model.add(LSTM(100,dropout=0.2,recurrent_dropout=0.2))
-        model.add(Dense(1,activation=ACTIVATION))
+        model.add(LSTM(units=100, dropout=0.2, recurrent_dropout=0.2))
+        model.add(Dense(units = 1,activation=ACTIVATION))
         model.summary()
         model.compile(loss=LOSS,optimizer=RMSprop(),metrics=METRICS)
-
         return model
+    

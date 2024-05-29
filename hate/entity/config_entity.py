@@ -2,17 +2,20 @@ from dataclasses import dataclass
 from hate.constants import *
 import os 
 
-
+# ARTIFACTS_DIR = 
+# DATA_INGESTION_ARTIFACTS_DIR
 @dataclass
 class DataIngestionConfig:
     def __init__(self):
         self.BUCKET_NAME:str = BUCKET_NAME
         self.ZIP_FILE_NAME: str = ZIP_FILE_NAME
-        self.DATA_INGESTION_ARTIFACTS_DIR: str = os.path.join(os.getcwd(),ARTIFACTS_DIR,DATA_INGESTION_ARTIFACTS_DIR)
-        self.DATA_ARTIFACTS_DIR: str = os.path.join(self.DATA_INGESTION_ARTIFACTS_DIR,DATA_INGESTION_IMBALANCE_DATA_DIR)
-        self.NEW_DATA_ARTIFACTS_DIR: str = os.path.join(self.DATA_INGESTION_ARTIFACTS_DIR,DATA_INGESTION_RAW_DATA_DIR)
-        self.ZIP_FILE_DIR = os.path.join(self.DATA_INGESTION_ARTIFACTS_DIR)
-        self.ZIP_FILE_PATH = os.path.join(self.DATA_INGESTION_ARTIFACTS_DIR,self.ZIP_FILE_NAME)
+        # self.DATA_INGESTION_ARTIFACTS_DIR: str = os.path.join(os.getcwd(),ARTIFACTS_DIR,DATA_INGESTION_ARTIFACTS_DIR)
+        # this will give the imbalannce_data_file_path
+        self.DATA_ARTIFACTS_DIR: str = os.path.join(DATA_INGESTION_ARTIFACTS_DIR,DATA_INGESTION_IMBALANCE_DATA_DIR)
+        # this will give the raw_data_file_path
+        self.NEW_DATA_ARTIFACTS_DIR: str = os.path.join(DATA_INGESTION_ARTIFACTS_DIR,DATA_INGESTION_RAW_DATA_DIR)
+        # self.ZIP_FILE_DIR = os.path.join(self.DATA_INGESTION_ARTIFACTS_DIR)
+        # self.ZIP_FILE_PATH = os.path.join(self.DATA_INGESTION_ARTIFACTS_DIR,self.ZIP_FILE_NAME)
 
 
 
@@ -68,7 +71,7 @@ class ModelPusherConfig:
 
     def __init__(self):
         self.TRAINED_MODEL_PATH = os.path.join(os.getcwd(),ARTIFACTS_DIR, MODEL_TRAINER_ARTIFACTS_DIR)
-        self.BUCKET_NAME = BUCKET_NAME
-        self.MODEL_NAME = MODEL_NAME
+        # self.BUCKET_NAME = BUCKET_NAME
+        # self.MODEL_NAME = MODEL_NAME
     
 
