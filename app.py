@@ -29,7 +29,7 @@ from hate.constants import *
 
 
 
-# app = FastAPI()
+app = FastAPI()
 
 # @app.get("/", tags=["authentication"])
 # async def index():
@@ -66,7 +66,7 @@ from hate.constants import *
 # Define the base URL of your FastAPI server
 BASE_URL = "http://localhost:8000"  # Adjust the URL based on your FastAPI server configuration
 
-st.title("Hate Speech Detection App")
+st.title("Sentiment Detection App")
 
 # Function to call the FastAPI training endpoint
 def train_model():
@@ -95,9 +95,9 @@ if train_button:
     train_result = train_model()
     st.success(train_result)
 
-st.header("Prediction")
-text_input = st.text_area("Enter text for prediction:")
-predict_button = st.button("Predict")
+st.header("Detect Sentiment")
+text_input = st.text_area("Enter text for Analysis:")
+predict_button = st.button("Go")
 if predict_button:
     if text_input:
         prediction = predict(text_input)
@@ -105,3 +105,13 @@ if predict_button:
     else:
         st.warning("Please enter some text for prediction.")
 
+# if __name__=="__main__":
+#     uvicorn.run(app, host="localhost", port=8001, log_level="debug")
+
+
+
+
+I recently visited the new cafe downtown and was pleasantly surprised. The ambiance was warm and inviting, with cozy seating and soft jazz music playing in the background. The staff were incredibly friendly and attentive, making sure every detail was perfect. I ordered a cappuccino and a croissant, both of which were delicious and beautifully presented. The coffee was rich and aromatic, and the croissant was flaky and buttery. Overall, it was a delightful experience, and I can’t wait to go back. This place is a gem, and I highly recommend it to anyone looking for a great spot to relax.
+
+
+"I believe in respect for all people. However, some individuals from certain communities are constantly causing problems. It's frustrating to deal with their behavior. On the other hand, promoting understanding and tolerance is crucial for a harmonious society. We should strive to overcome our biases and prejudices."
